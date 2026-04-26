@@ -1,9 +1,27 @@
 import { ProductCard } from "../components/ProductCard";
-import { Filter, ChevronDown } from "lucide-react";
+import { FilterChip } from "../components/FilterChip";
+import { PriceRangeSlider } from "../components/PriceRangeSlider";
+import {
+  Filter,
+  ChevronDown,
+  X,
+  Grid3x3,
+  List,
+  Home,
+  ChevronRight,
+  SlidersHorizontal,
+  Star,
+} from "lucide-react";
 import { useState } from "react";
+import { Link } from "../router/Router";
 
 export function ProductListingPage() {
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [freeShipping, setFreeShipping] = useState(false);
+  const [sortBy, setSortBy] = useState("popular");
 
   const products = [
     {
@@ -95,149 +113,375 @@ export function ProductListingPage() {
   ];
 
   const categories = [
-    "Văn học",
-    "Kinh tế",
-    "Kỹ năng sống",
-    "Thiếu nhi",
-    "Tâm lý",
-    "Lịch sử",
+    { id: "van-hoc", name: "Văn học", count: 2500 },
+    { id: "kinh-te", name: "Kinh tế", count: 1800 },
+    { id: "ky-nang", name: "Kỹ năng sống", count: 1200 },
+    { id: "thieu-nhi", name: "Thiếu nhi", count: 980 },
+    { id: "tam-ly", name: "Tâm lý", count: 750 },
+    { id: "lich-su", name: "Lịch sử", count: 650 },
   ];
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#0f172a] mb-2">
-          Khám phá sách
-        </h1>
-        <p className="text-[#64748b]">{products.length} sản phẩm</p>
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const toggleRating = (rating: number) => {
+    setSelectedRatings((prev) =>
+      prev.includes(rating)
+        ? prev.filter((r) => r !== rating)
+        : [...prev, rating]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSelectedCategories([]);
+    setSelectedRatings([]);
+    setFreeShipping(false);
+  };
+
+  const activeFilterCount =
+    selectedCategories.length + selectedRatings.length + (freeShipping ? 1 : 0);
+
+  const FilterSidebar = () => (
+    <div className="space-y-6">
+      <div>
+        <h4 className="font-bold text-[#0f172a] mb-3">Danh mục</h4>
+        <div className="space-y-2">
+          {categories.map((category) => (
+            <label
+              key={category.id}
+              className="flex items-center gap-2 cursor-pointer group"
+            >
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(category.id)}
+                onChange={() => toggleCategory(category.id)}
+                className="w-4 h-4 rounded border-[#cbd5e1] text-[#fcd34d] focus:ring-[#fcd34d]"
+              />
+              <span className="text-sm text-[#64748b] group-hover:text-[#0f172a] flex-1">
+                {category.name}
+              </span>
+              <span className="text-xs text-[#94a3b8]">({category.count})</span>
+            </label>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <aside className="md:col-span-1">
-          <div className="bg-white rounded-2xl p-6 border border-[#e2e8f0]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#0f172a]">Bộ lọc</h3>
-              <button
-                className="md:hidden"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-5 h-5" />
-              </button>
-            </div>
+      <div className="border-t border-[#e2e8f0] pt-6">
+        <h4 className="font-bold text-[#0f172a] mb-3">Khoảng giá</h4>
+        <PriceRangeSlider min={0} max={500000} />
+      </div>
 
-            <div
-              className={`${showFilters ? "block" : "hidden"} md:block space-y-6`}
+      <div className="border-t border-[#e2e8f0] pt-6">
+        <h4 className="font-bold text-[#0f172a] mb-3">Đánh giá</h4>
+        <div className="space-y-2">
+          {[5, 4, 3].map((rating) => (
+            <label
+              key={rating}
+              className="flex items-center gap-2 cursor-pointer group"
             >
-              <div>
-                <h4 className="font-medium text-[#0f172a] mb-3">Danh mục</h4>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <label
-                      key={category}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-[#cbd5e1] text-[#fcd34d] focus:ring-[#fcd34d]"
-                      />
-                      <span className="text-sm text-[#64748b]">{category}</span>
-                    </label>
-                  ))}
-                </div>
+              <input
+                type="checkbox"
+                checked={selectedRatings.includes(rating)}
+                onChange={() => toggleRating(rating)}
+                className="w-4 h-4 rounded border-[#cbd5e1] text-[#fcd34d] focus:ring-[#fcd34d]"
+              />
+              <div className="flex items-center gap-1">
+                {Array.from({ length: rating }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className="w-3.5 h-3.5 fill-[#fcd34d] text-[#fcd34d]"
+                  />
+                ))}
+                {Array.from({ length: 5 - rating }).map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 text-[#cbd5e1]" />
+                ))}
               </div>
+              <span className="text-sm text-[#64748b] group-hover:text-[#0f172a]">
+                trở lên
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
-              <div className="border-t border-[#e2e8f0] pt-6">
-                <h4 className="font-medium text-[#0f172a] mb-3">Khoảng giá</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      placeholder="Từ"
-                      className="w-full px-3 py-2 border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#fcd34d]"
-                    />
-                    <span className="text-[#64748b]">-</span>
-                    <input
-                      type="number"
-                      placeholder="Đến"
-                      className="w-full px-3 py-2 border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#fcd34d]"
-                    />
-                  </div>
-                  <button className="w-full py-2 bg-[#0f172a] text-white rounded-lg hover:bg-[#334155]">
-                    Áp dụng
-                  </button>
-                </div>
-              </div>
+      <div className="border-t border-[#e2e8f0] pt-6">
+        <h4 className="font-bold text-[#0f172a] mb-3">Giao hàng</h4>
+        <label className="flex items-center gap-2 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={freeShipping}
+            onChange={(e) => setFreeShipping(e.target.checked)}
+            className="w-4 h-4 rounded border-[#cbd5e1] text-[#fcd34d] focus:ring-[#fcd34d]"
+          />
+          <span className="text-sm text-[#64748b] group-hover:text-[#0f172a]">
+            Miễn phí vận chuyển
+          </span>
+        </label>
+      </div>
 
-              <div className="border-t border-[#e2e8f0] pt-6">
-                <h4 className="font-medium text-[#0f172a] mb-3">Đánh giá</h4>
-                <div className="space-y-2">
-                  {[5, 4, 3].map((rating) => (
-                    <label
-                      key={rating}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-[#cbd5e1] text-[#fcd34d] focus:ring-[#fcd34d]"
-                      />
-                      <span className="text-sm text-[#64748b]">
-                        {rating} sao trở lên
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+      {activeFilterCount > 0 && (
+        <button
+          onClick={clearAllFilters}
+          className="w-full py-2 text-sm text-[#dc2626] hover:text-[#991b1b] font-medium"
+        >
+          Xóa tất cả bộ lọc
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-[#64748b] mb-4">
+        <Link to="/" className="hover:text-[#0f172a]">
+          <Home className="w-4 h-4" />
+        </Link>
+        <ChevronRight className="w-4 h-4" />
+        <Link to="/san-pham" className="hover:text-[#0f172a]">
+          Sản phẩm
+        </Link>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-[#0f172a] font-medium">Tất cả</span>
+      </nav>
+
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-2">
+          Khám phá sách
+        </h1>
+        <p className="text-[#64748b]">
+          Tìm thấy <span className="font-bold text-[#0f172a]">{products.length}</span> sản
+          phẩm
+        </p>
+      </div>
+
+      {/* Active Filters */}
+      {activeFilterCount > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-4">
+          <span className="text-sm text-[#64748b]">Đang lọc:</span>
+          {selectedCategories.map((catId) => {
+            const category = categories.find((c) => c.id === catId);
+            return (
+              <FilterChip
+                key={catId}
+                label={category?.name || ""}
+                onRemove={() => toggleCategory(catId)}
+              />
+            );
+          })}
+          {selectedRatings.map((rating) => (
+            <FilterChip
+              key={rating}
+              label={`${rating} sao trở lên`}
+              onRemove={() => toggleRating(rating)}
+            />
+          ))}
+          {freeShipping && (
+            <FilterChip
+              label="Miễn phí vận chuyển"
+              onRemove={() => setFreeShipping(false)}
+            />
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Desktop Filters */}
+        <aside className="hidden lg:block lg:col-span-1">
+          <div className="bg-white rounded-2xl p-6 border border-[#e2e8f0] sticky top-24">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-[#0f172a] flex items-center gap-2">
+                <SlidersHorizontal className="w-5 h-5" />
+                Bộ lọc
+              </h3>
+              {activeFilterCount > 0 && (
+                <span className="px-2 py-1 bg-[#fcd34d] text-[#0f172a] text-xs font-bold rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
             </div>
+            <FilterSidebar />
           </div>
         </aside>
 
-        <div className="md:col-span-3">
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          {/* Toolbar */}
           <div className="bg-white rounded-2xl p-4 mb-6 border border-[#e2e8f0]">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <span className="text-[#64748b]">Sắp xếp theo:</span>
-              <div className="flex gap-2 flex-wrap">
-                <button className="px-4 py-2 bg-[#0f172a] text-white rounded-full">
-                  Phổ biến
-                </button>
-                <button className="px-4 py-2 border border-[#e2e8f0] rounded-full hover:bg-[#fff7ed]">
-                  Mới nhất
-                </button>
-                <button className="px-4 py-2 border border-[#e2e8f0] rounded-full hover:bg-[#fff7ed]">
-                  Bán chạy
-                </button>
-                <button className="px-4 py-2 border border-[#e2e8f0] rounded-full hover:bg-[#fff7ed] flex items-center gap-2">
-                  Giá
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+              {/* Mobile Filter Button */}
+              <button
+                onClick={() => setShowFilters(true)}
+                className="lg:hidden flex items-center gap-2 px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-[#fff7ed]"
+              >
+                <Filter className="w-4 h-4" />
+                <span className="text-sm font-medium">Lọc</span>
+                {activeFilterCount > 0 && (
+                  <span className="px-2 py-0.5 bg-[#fcd34d] text-[#0f172a] text-xs font-bold rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Sort Options */}
+              <div className="flex items-center gap-2 flex-wrap flex-1 justify-end">
+                <span className="text-sm text-[#64748b] hidden md:inline">
+                  Sắp xếp:
+                </span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-4 py-2 border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#fcd34d] text-sm bg-white"
+                >
+                  <option value="popular">Phổ biến</option>
+                  <option value="newest">Mới nhất</option>
+                  <option value="bestseller">Bán chạy</option>
+                  <option value="price-asc">Giá thấp đến cao</option>
+                  <option value="price-desc">Giá cao đến thấp</option>
+                  <option value="rating">Đánh giá cao</option>
+                </select>
+
+                {/* View Toggle */}
+                <div className="hidden md:flex items-center gap-1 border border-[#e2e8f0] rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded ${
+                      viewMode === "grid"
+                        ? "bg-[#0f172a] text-white"
+                        : "text-[#64748b] hover:bg-[#f1f5f9]"
+                    }`}
+                  >
+                    <Grid3x3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded ${
+                      viewMode === "list"
+                        ? "bg-[#0f172a] text-white"
+                        : "text-[#64748b] hover:bg-[#f1f5f9]"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {/* Products Grid */}
+          {products.length > 0 ? (
+            <>
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"
+                    : "space-y-4"
+                }
+              >
+                {products.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
 
-          <div className="flex justify-center mt-8 gap-2">
-            <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white">
-              Trước
-            </button>
-            <button className="px-4 py-2 bg-[#0f172a] text-white rounded-lg">
-              1
-            </button>
-            <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white">
-              2
-            </button>
-            <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white">
-              3
-            </button>
-            <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white">
-              Sau
-            </button>
-          </div>
+              {/* Pagination */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                <p className="text-sm text-[#64748b]">
+                  Hiển thị 1-{products.length} trong {products.length} sản phẩm
+                </p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white text-sm font-medium text-[#64748b] hover:text-[#0f172a]">
+                    Trước
+                  </button>
+                  <button className="px-4 py-2 bg-[#0f172a] text-white rounded-lg text-sm font-medium">
+                    1
+                  </button>
+                  <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white text-sm font-medium text-[#64748b] hover:text-[#0f172a]">
+                    2
+                  </button>
+                  <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white text-sm font-medium text-[#64748b] hover:text-[#0f172a]">
+                    3
+                  </button>
+                  <button className="px-4 py-2 border border-[#e2e8f0] rounded-lg hover:bg-white text-sm font-medium text-[#64748b] hover:text-[#0f172a]">
+                    Sau
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Empty State */
+            <div className="bg-white rounded-2xl p-12 text-center border border-[#e2e8f0]">
+              <div className="w-24 h-24 bg-[#fff7ed] rounded-full flex items-center justify-center mx-auto mb-6">
+                <Filter className="w-12 h-12 text-[#64748b]" />
+              </div>
+              <h3 className="text-xl font-bold text-[#0f172a] mb-3">
+                Không tìm thấy sản phẩm
+              </h3>
+              <p className="text-[#64748b] mb-6">
+                Không có sản phẩm nào phù hợp với bộ lọc của bạn. Hãy thử điều
+                chỉnh hoặc xóa bộ lọc.
+              </p>
+              <button
+                onClick={clearAllFilters}
+                className="px-6 py-3 bg-[#0f172a] text-white rounded-full hover:bg-[#334155]"
+              >
+                Xóa tất cả bộ lọc
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Mobile Filter Drawer */}
+      {showFilters && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowFilters(false)}
+          />
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-[#fff7ed] shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-[#e2e8f0] p-4 flex items-center justify-between z-10">
+              <h3 className="font-bold text-[#0f172a] flex items-center gap-2">
+                <SlidersHorizontal className="w-5 h-5" />
+                Bộ lọc
+                {activeFilterCount > 0 && (
+                  <span className="px-2 py-1 bg-[#fcd34d] text-[#0f172a] text-xs font-bold rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="p-2 hover:bg-[#f1f5f9] rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <FilterSidebar />
+            </div>
+            <div className="sticky bottom-0 bg-white border-t border-[#e2e8f0] p-4 flex gap-3">
+              <button
+                onClick={clearAllFilters}
+                className="flex-1 py-3 border-2 border-[#e2e8f0] rounded-full hover:bg-[#f1f5f9] font-medium"
+              >
+                Xóa bộ lọc
+              </button>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="flex-1 py-3 bg-[#0f172a] text-white rounded-full hover:bg-[#334155] font-medium"
+              >
+                Xem {products.length} sản phẩm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
