@@ -18,11 +18,11 @@ export function SellerLayout({ children }: SellerLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const menuItems = [
-    { path: "/nguoi-ban", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/nguoi-ban/san-pham", label: "Quản lý sản phẩm", icon: Package },
+    { path: "/nguoi-ban", label: "Tổng quan", icon: LayoutDashboard },
+    { path: "/nguoi-ban/san-pham", label: "Sản phẩm", icon: Package },
     {
       path: "/nguoi-ban/cua-hang/my-shop",
-      label: "Trang cửa hàng",
+      label: "Cửa hàng",
       icon: Store,
     },
   ];
